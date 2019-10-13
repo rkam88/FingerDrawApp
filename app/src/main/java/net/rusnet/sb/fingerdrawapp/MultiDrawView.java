@@ -6,6 +6,7 @@ import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.PointF;
 import android.util.AttributeSet;
+import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
 
@@ -29,12 +30,21 @@ public class MultiDrawView extends View {
 
     private List<Drawing> mDrawings = new ArrayList<>();
 
+    private boolean mScrollMode;
+
+    private GestureDetector mDetector;
+
+    public void setScrollMode(boolean scrollMode) {
+        mScrollMode = scrollMode;
+    }
+
     public MultiDrawView(Context context) {
         this(context, null);
     }
 
     public MultiDrawView(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
+        init();
     }
 
     public void clear() {
@@ -48,11 +58,12 @@ public class MultiDrawView extends View {
 
         mCurrentPaint.setColor(mCurrentColor);
         mCurrentPaint.setAntiAlias(true);
-        mCurrentPaint.setStrokeWidth(10f);
+        mCurrentPaint.setStrokeWidth(getContext().getResources().getDimension(R.dimen.default_stroke_width));
 
         switch (brush) {
             case PATH:
             case LINE:
+            case FIGURE:
                 mCurrentPaint.setStyle(Paint.Style.STROKE);
                 break;
             case RECTANGLE:
@@ -99,14 +110,47 @@ public class MultiDrawView extends View {
                             mCurrentCoordinates.get(SECOND_POINT_INDEX).y);
                     canvas.drawRect(left, top, right, bottom, drawing.getDrawingPaint());
                     break;
+                case FIGURE:
+                    if (mCurrentCoordinates.isEmpty()) return;
+
+                    if (mCurrentCoordinates.size() == 1) {
+                        canvas.drawPoint(mCurrentCoordinates.get(FIRST_POINT_INDEX).x,
+                                mCurrentCoordinates.get(FIRST_POINT_INDEX).y,
+                                drawing.getDrawingPaint());
+                    } else {
+                        for (int i = 1; i < mCurrentCoordinates.size(); i++) {
+                            PointF one = mCurrentCoordinates.get(i-1);
+                            PointF two = mCurrentCoordinates.get(i);
+
+                            canvas.drawLine(one.x,
+                                    one.y,
+                                    two.x,
+                                    two.y,
+                                    drawing.getDrawingPaint());
+
+                            if (i == mCurrentCoordinates.size() - 1) {
+                                one = mCurrentCoordinates.get(FIRST_POINT_INDEX);
+                                canvas.drawLine(one.x,
+                                        one.y,
+                                        two.x,
+                                        two.y,
+                                        drawing.getDrawingPaint());
+                            }
+                        }
+                    }
             }
         }
     }
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
+
+        if (mScrollMode) {
+            return mDetector.onTouchEvent(event);
+        }
+
         PointF currentPoint = new PointF(event.getX(), event.getY());
-        int action = event.getAction();
+        int action = event.getActionMasked();
 
         switch (action) {
             case MotionEvent.ACTION_DOWN:
@@ -118,6 +162,20 @@ public class MultiDrawView extends View {
                     mCurrentDrawing.addPoint(currentPoint);
                 }
                 break;
+            case MotionEvent.ACTION_POINTER_DOWN: //событие опускания доп. пальца
+                int actionIndex = event.getActionIndex();
+                int pointerId = event.getPointerId(actionIndex);
+                if (mCurrentDrawing.getCoordinates().size() == pointerId) {
+                    mCurrentDrawing.addPoint(new PointF(
+                            event.getX(actionIndex),
+                            event.getY(actionIndex)
+                    ));
+                } else {
+                    mCurrentDrawing.setPoint(new PointF(
+                            event.getX(actionIndex),
+                            event.getY(actionIndex)), pointerId);
+                }
+                break;
             case MotionEvent.ACTION_MOVE:
                 switch (mCurrentDrawing.getDrawingType()) {
                     case PATH:
@@ -127,14 +185,65 @@ public class MultiDrawView extends View {
                     case RECTANGLE:
                         mCurrentDrawing.setPoint(currentPoint, SECOND_POINT_INDEX);
                         break;
+                    case FIGURE:
+                        for (int i = 0; i < event.getPointerCount(); i++) {
+                            int id = event.getPointerId(i);
+                            mCurrentDrawing.setPoint(new PointF(
+                                    event.getX(i),
+                                    event.getY(i)), id);
+                        }
+                        break;
                 }
                 break;
             case MotionEvent.ACTION_UP:
             case MotionEvent.ACTION_CANCEL:
+                return false;
         }
 
         invalidate();
         return true;
+    }
+
+    private void init() {
+        mDetector = new GestureDetector(getContext(), new GestureDetector.OnGestureListener() {
+            @Override
+            public boolean onDown(MotionEvent e) {
+                return true;
+            }
+
+            @Override
+            public void onShowPress(MotionEvent e) {
+
+            }
+
+            @Override
+            public boolean onSingleTapUp(MotionEvent e) {
+                return false;
+            }
+
+            @Override
+            public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
+                for (Drawing drawing : mDrawings) {
+                    for (PointF coordinate : drawing.getCoordinates()) {
+                        coordinate.x -= distanceX;
+                        coordinate.y -= distanceY;
+                    }
+                }
+
+                invalidate();
+                return true;
+            }
+
+            @Override
+            public void onLongPress(MotionEvent e) {
+
+            }
+
+            @Override
+            public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
+                return false;
+            }
+        });
     }
 
 }

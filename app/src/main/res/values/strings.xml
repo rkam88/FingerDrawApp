@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">FingerDrawApp</string>
     <string name="reset">RESET</string>
+    <string name="scroll">Scroll</string>
 </resources>

@@ -6,6 +6,7 @@ import android.widget.Button;
 import android.widget.ImageView;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.SwitchCompat;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -20,6 +21,9 @@ public class MainActivity extends AppCompatActivity {
 
     private Button mColorPickerButton;
     private int mSelectedColor;
+
+    private SwitchCompat mSwitch;
+    private View mScrollSwitchButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,6 +56,8 @@ public class MainActivity extends AppCompatActivity {
         mButtons.put(Brush.PATH, (ImageView) findViewById(R.id.path_button));
         mButtons.put(Brush.LINE, (ImageView) findViewById(R.id.line_button));
         mButtons.put(Brush.RECTANGLE, (ImageView) findViewById(R.id.rectangle_button));
+        mButtons.put(Brush.FIGURE, (ImageView) findViewById(R.id.figure_button));
+
 
         for (final Brush brush : mButtons.keySet()) {
             mButtons.get(brush).setOnClickListener(new View.OnClickListener() {
@@ -65,6 +71,17 @@ public class MainActivity extends AppCompatActivity {
         }
 
         mButtons.get(Brush.LINE).callOnClick();
+
+        mSwitch = findViewById(R.id.scroll_switch);
+
+        mScrollSwitchButton = findViewById(R.id.scroll_switch_button);
+        mScrollSwitchButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mSwitch.setChecked(!mSwitch.isChecked());
+                mDrawView.setScrollMode(mSwitch.isChecked());
+            }
+        });
 
     }
 

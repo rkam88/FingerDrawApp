@@ -46,6 +46,45 @@
             android:background="@color/inactiveBrush"
             />
 
+        <ImageView
+            android:id="@+id/figure_button"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:src="@drawable/icon_figure"
+            android:background="@color/inactiveBrush"
+            />
+
+        <RelativeLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1">
+
+            <TextView
+                android:id="@+id/scroll_text_view"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerHorizontal="true"
+                android:layout_alignParentTop="true"
+                android:text="@string/scroll"
+                android:textColor="@color/defaultColor"
+                />
+
+            <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/scroll_switch"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/scroll_text_view"
+                android:layout_centerHorizontal="true"
+                />
+
+            <View
+                android:id="@+id/scroll_switch_button"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                />
+
+        </RelativeLayout>
 
         <Button
             android:layout_marginLeft="@dimen/default_margin"
